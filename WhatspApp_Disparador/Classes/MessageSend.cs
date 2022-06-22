@@ -24,21 +24,17 @@ namespace WhatspApp_Disparador
         public Sessoes Sender
         {
             get {
-                sender = Sessoes.GetList().FirstOrDefault(x => x.IdSuporte == IdSuporte) ?? 
+                if (sender == null)                 
+                {
+                    sender = Sessoes.GetList().FirstOrDefault(x => x.IdSuporte == IdSuporte) ??
                     Sessoes.GetList().FirstOrDefault(x => x.IdSuporte == 0);
+                }                
                 return sender; 
             }
             set { sender = value; }
         }
-
         public bool Send { get; set; }
-        public DateTime DateTime { get; set; }
-
-        public MessageSend() 
-        {
-            
-        }
-        
+        public DateTime DateTime { get; set; }        
         public async void UpdateDbSoftcom()
         {
             string _string = $@"
@@ -48,7 +44,7 @@ where id = {Id}";
 
             await SQL.ExeQuerySQL_DbBlip(_string);
         }
-        public void InsertDb()
+        public async void InsertDb()
         {
             string _string = $@"
 INSERT INTO `dbwhatsdm`.`messagesend` (
@@ -66,7 +62,7 @@ NULL,
 NOW()
 );";
 
-            SQL.ExeQueryMySQL(_string);
+            await SQL.ExeQueryMySQL(_string);
         }
         public async void UpdateDb()
         {

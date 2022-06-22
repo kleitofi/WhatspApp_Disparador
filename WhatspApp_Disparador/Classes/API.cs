@@ -16,6 +16,10 @@ namespace WhatspApp_Disparador
 {
     public static class API
     {
+        /// <summary>
+        /// Função principal onde passa a classe messageSend e converte em messageSendWhats para setar no Disparo do WhatsDM
+        /// </summary>
+        /// <param name="messageSend"></param>
         public static async void SendDM(MessageSend messageSend)
         {
             //################################|ENVIO|################################
@@ -32,6 +36,7 @@ namespace WhatspApp_Disparador
             try
             {
                 var responseString = await $@"http://ragnar:{message.Sender.Porta}/send-message"
+                    .ConfigureRequest(settings => settings.Timeout = TimeSpan.FromSeconds(4))
                      .PostUrlEncodedAsync(new
                      {
                          number = message.NumTelefone,
@@ -53,7 +58,7 @@ namespace WhatspApp_Disparador
         public static async void TesteSend()
         {
             List<Sessoes> _ListSessoes = Sessoes.GetList();
-            if (_ListSessoes != null )
+            if (_ListSessoes != null)
             {
                 foreach (var item in Sessoes.GetList())
                 {
@@ -73,7 +78,7 @@ namespace WhatspApp_Disparador
                         _status = false;
                     }
                     Console.WriteLine(item.NumSessao + ":" + _status);
-                    SQL.ExeQueryAccess(
+                    await SQL.ExeQueryAccess(
                     $@"UPDATE TB_Sessoes SET TB_Sessoes.Ativo = {_status}
                 WHERE WhatsSuporte = '{item.NumSessao}';");
 

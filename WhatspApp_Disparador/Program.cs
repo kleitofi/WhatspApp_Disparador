@@ -52,7 +52,7 @@ namespace WhatspApp_Disparador
                     }
                     Console.WriteLine("Insert OK!");
                 }
-                WhatsDM();
+                WhatsDM();                
                 Thread.Sleep(TimeSpan.FromSeconds(30));
             }
             Application.Run();
@@ -63,55 +63,15 @@ namespace WhatspApp_Disparador
 
             if (_Sends != null)
             {
-                int _cont = _Sends.Count;
-                //API.TesteSend();
+                int _cont = _Sends.Count;                
                 Console.WriteLine($"{_cont,5} {"ID",6} {"Suporte",7} {"Cliente",7} {"WhatsDM",12} {"Template",16} {"Status",5}");
                 foreach (var item in _Sends)
                 {                    
-                    MessageSend(item);
+                    API.SendDM(item);
                     Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template,16} {item.Return.Length,5}");
                 }
             }
-        }
-        /// <summary>
-        /// Função principal onde passa a classe messageSend e converte em messageSendWhats para setar no Disparo do WhatsDM
-        /// </summary>
-        /// <param name="messageSend"></param>
-        public static void MessageSend(MessageSend messageSend)
-        {    
-            //################################|ENVIO|################################
-            string retornoWhatsDM_Post = MessageSendWhatsDM(messageSend).Result;
-
-            messageSend.Send = true;
-            messageSend.Return = retornoWhatsDM_Post;
-            messageSend.UpdateDb();
-        }
-        public static async Task<string> MessageSendWhatsDM(MessageSend message)
-        {
-            try
-            {
-                //API.TesteSend();
-                var responseString = await $@"http://ragnar:{message.Sender.Porta}/send-message"
-                     .ConfigureRequest(settings => settings.Timeout = TimeSpan.FromSeconds(4))
-                     .PostUrlEncodedAsync(new
-                     {
-                         number = message.NumTelefone,
-                         message = message.Message,
-                         sender = message.Sender.NumSessao
-                     })
-                     .ReceiveString();
-
-                await Task.CompletedTask;
-
-                return responseString;
-            }
-            catch (Exception ex)
-            {
-                Log($"MessageSendWhatsDM:{ex.Message}\n{message}");
-                return "Erro !";
-            }
-
-        }
+        }             
         public static bool Log(string strMensagem, string strNomeArquivo = "Log")
         {
             try

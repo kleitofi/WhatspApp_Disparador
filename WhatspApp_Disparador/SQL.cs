@@ -312,7 +312,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
                 // The connection is automatically closed becasuse of using block.
             }
         }
-        public static void ExeQueryAccess(string strSQL, OleDbConnection conn = null)
+        public static async Task ExeQueryAccess(string strSQL, OleDbConnection conn = null)
         {
             conn = conn == null ? connBaseLocal : conn;            
             // Create a command and set its connection    
@@ -323,7 +323,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
                 // Open connecton    
                 conn.Open();
                 // Execute command    
-                cmdQry.ExecuteReader();
+                await cmdQry.ExecuteReaderAsync();
             }
             catch (Exception ex)
             {
@@ -337,7 +337,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
         }
         public static List<string> SelectAccess(string strSQL, string campo, OleDbConnection conn = null)
         {
-            List<string> list = new List<string>();
+            List<string> _list = new List<string>();
             conn = conn == null ? connBaseLocal : conn;            
             OleDbCommand cmdQry = new OleDbCommand(strSQL, conn);
             try
@@ -346,9 +346,9 @@ Data Source=ragnar\SQLEXPRESS,5433");
                 OleDbDataReader reader = cmdQry.ExecuteReader();
                 while (reader.Read())
                 {
-                    list.Add(reader[campo].ToString());
+                    _list.Add(reader[campo].ToString());
                 }
-                return list;
+                return _list;
             }
             catch (Exception ex)
             {
