@@ -5,8 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.Json;
+using System.ComponentModel;
+using Newtonsoft.Json.Linq;
 
 namespace WhatspApp_Disparador
 {
@@ -17,24 +21,24 @@ namespace WhatspApp_Disparador
         public Guid Guid { get; set; }
         public int IdSuporte { get; set; }
         public int IdCliente { get; set; }
-        public string Template { get; set; }
+        public Template Template { get; set; }
         public string NumTelefone { get; set; }
         public string Message { get; set; }
-        public string Return { get; set; }       
+        public string Return { get; set; }
         public Sessoes Sender
         {
-            get {
-                if (sender == null)                 
+            get
+            {
+                if (sender == null)
                 {
-                    sender = Sessoes.GetList().FirstOrDefault(x => x.IdSuporte == IdSuporte) ??
-                    Sessoes.GetList().FirstOrDefault(x => x.IdSuporte == 0);
-                }                
-                return sender; 
+                    sender = GetSessoes(JsonNode.Parse(Template.Criterios)["Sender"].AsArray());
+                }
+                return sender;
             }
             set { sender = value; }
         }
         public bool Send { get; set; }
-        public DateTime DateTime { get; set; }        
+        public DateTime DateTime { get; set; }
         public async void UpdateDbSoftcom()
         {
             string _string = $@"
@@ -54,7 +58,7 @@ NULL,
 '{Guid}' ,
 '{IdSuporte}' ,
 '{IdCliente}' ,
-'{Template}' ,
+'{Template.Nome}' ,
 '{NumTelefone}' ,
 '{Message}' ,
 '{Return}' ,
@@ -75,5 +79,32 @@ WHERE Id = '{Id}'
 ";
             await SQL.ExeQueryMySQL(_string);
         }
+        private Sessoes GetSessoes(JsonArray sender)
+        {
+            Sessoes _sessoes = null;
+            foreach (string item in sender)
+            {
+                if (!string.IsNullOrEmpty(item) && item == "own")
+                {
+                    _sessoes = Sessoes.GetList().FirstOrDefault(x => x.IdSuporte == IdSuporte);
+                }
+                else
+                {
+                    _sessoes = Sessoes.GetList().FirstOrDefault(x => x.Nome == item);
+                }
+
+                if( _sessoes != null ) return _sessoes;
+            }
+            return _sessoes;
+        }
+        public static List<MessageSend> SelectDb_Soft()
+        {
+            return SQL.GetListEnvio_DbSoft();
+        }
+        public static List<MessageSend> SelectDb_DM()
+        {
+            return SQL.GetListEnvio_DbWhatsDM();
+        }
+
     }
 }

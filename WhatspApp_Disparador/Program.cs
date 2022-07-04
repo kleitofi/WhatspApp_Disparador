@@ -22,14 +22,27 @@ namespace WhatspApp_Disparador
         [STAThread]
         static void Main()
         {
-            //API.TesteSend();
             while (true)
-            {                               
-                List<MessageSend> _messageSends = SQL.GetListEnvio_DbSoft();                
-                if (_messageSends != null && _messageSends.Count > 0)
+            {
+                //Select mensagens e tratamenta do copor da mensagem insere o MySQL DB_WhatsDM
+                WhatsSoft();
+                //Envio das mensagens para API
+                WhatsDM();
+                Thread.Sleep(TimeSpan.FromSeconds(30));
+            }
+        }
+        /// <summary>
+        /// Faz a requisação do banco Blip e trata a mensagem de acordo com template
+        /// </summary>
+        private static void WhatsSoft() 
+        {
+            List<MessageSend> _messageSends = MessageSend.SelectDb_Soft();
+            if (_messageSends != null && _messageSends.Count > 0)
+            {
+                Console.Write($"Novo lote({_messageSends.Count}):{DateTime.Now}...");
+                foreach (var item in _messageSends)
                 {
-                    Console.Write($"Novo lote({_messageSends.Count}):{DateTime.Now}...");
-                    foreach (var item in _messageSends)
+                    if (item.Template != null)
                     {
                         string[] msg = SQL.BodyMessage(item);
                         if (msg != null)
@@ -50,25 +63,40 @@ namespace WhatspApp_Disparador
                             item.UpdateDbSoftcom();
                         }
                     }
-                    Console.WriteLine("Insert OK!");
+                    else
+                    {
+                        Console.WriteLine("Template NULL");
+                    }
                 }
-                WhatsDM();                
-                Thread.Sleep(TimeSpan.FromSeconds(30));
+                Console.WriteLine("Insert OK!");
             }
-            Application.Run();
         }
-        public static void WhatsDM()
+        /// <summary>
+        /// Envia as messagens do banco MySQL do WhatsDM para seus Sender
+        /// </summary>
+        private static void WhatsDM()
         {
-            List<MessageSend> _Sends = SQL.GetListEnvio_DbWhatsDM();
+            List<MessageSend> _Sends = MessageSend.SelectDb_DM();
 
             if (_Sends != null)
             {
+                API.TesteSend();
                 int _cont = _Sends.Count;                
-                Console.WriteLine($"{_cont,5} {"ID",6} {"Suporte",7} {"Cliente",7} {"WhatsDM",12} {"Template",16} {"Status",5}");
+                Console.WriteLine($"{_cont,5} {"ID",6} {"Suporte",7} {"Cliente",7} {"WhatsDM",12} {"Template",-26} {"Status",5}");
                 foreach (var item in _Sends)
-                {                    
-                    API.SendDM(item);
-                    Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template,16} {item.Return.Length,5}");
+                {
+                    if (item.Sender != null && item.Sender.Ativo)
+                    {
+                        API.SendDM(item);
+                        Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template.Nome,-26} {item.Return.Length,5}");
+                    }
+                    else 
+                    {
+                        item.Return = "Sender_OFF";
+                        item.UpdateDb();
+                        //Console.WriteLine($"{_cont--,5} Sender_OFF={item.Sender.NumSessao}:{item.Sender.Porta}");
+                        Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template.Nome,-26} {item.Return,5}");
+                    }                    
                 }
             }
         }             

@@ -55,18 +55,18 @@ namespace WhatspApp_Disparador
                 return "Erro !";
             }
         }
-        public static async void TesteSend()
+        public static void TesteSend()
         {
             List<Sessoes> _ListSessoes = Sessoes.GetList();
             if (_ListSessoes != null)
             {
                 foreach (var item in Sessoes.GetList())
                 {
-                    string _retorno = await WhatDM_Post(new MessageSend
+                    string _retorno = WhatDM_Post(new MessageSend
                     {
                         NumTelefone = "558387183158",
                         Sender = item
-                    });
+                    }).Result;
                     bool _status;
                     try
                     {
@@ -77,11 +77,8 @@ namespace WhatspApp_Disparador
                     {
                         _status = false;
                     }
-                    Console.WriteLine(item.NumSessao + ":" + _status);
-                    await SQL.ExeQueryAccess(
-                    $@"UPDATE TB_Sessoes SET TB_Sessoes.Ativo = {_status}
-                WHERE WhatsSuporte = '{item.NumSessao}';");
-
+                    item.Ativo = _status;
+                    item.UpdateStatus();
                 }
             }
         }

@@ -10,28 +10,22 @@ namespace WhatspApp_Disparador
     {
         public int Id { get; set; }
         public int IdSuporte { get; set; }
+        public string Nome { get; set; }
+        public string Setor { get; set; }
         public string Porta { get; set; }
         public string NumSessao { get; set; }
         public bool Ativo { get; set; }
-        public Sessoes()
-        {
-            //API.TesteSend();
-        }
         public static List<Sessoes> GetList()
         {
-            string _script =
-                $@"SELECT Id, IdSuporte, Porta, WhatsSuporte, Ativo
-FROM TB_Sessoes;";
-
-            return SQL.GetSessoes(_script);
+            return SQL.GetSessoes();
         }
-        public void SetStatus()
+        public async void UpdateStatus()
         {
-            string _script =
-                $@"UPDATE SET
+            string _script =$@"
+UPDATE TB_Sessoes SET
 Ativo = {Ativo}
 WHERE Id = {Id}";
-            SQL.ExeQueryAccess(_script);
+            await SQL.ExeQueryAccess(_script);
         }
     }
 

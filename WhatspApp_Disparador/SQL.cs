@@ -27,11 +27,58 @@ Data Source=ragnar\SQLEXPRESS,5433");
 
         private static OleDbConnection connBaseLocal = new OleDbConnection
             ($"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=\\\\ragnar\\WhatsDM_Base\\Base.mdb");
-           
+
 
         private static MySqlConnection connBaseWhatsAPI = new MySqlConnection(
             "Server=ragnar; port=3306 ;Database=dbWhatsDM; Uid=softcom; Pwd=qaz123;convert zero datetime=True");
-
+        public static Template GetTemplate(string tamplateNome)
+        {
+            string _script = $@"
+SELECT [Id]
+      ,[Gerador_id]
+      ,[Tipo]
+      ,[Nome]
+      ,[ParameterQuant]
+      ,[Conteudo]
+      ,[Criterios]
+  FROM [dbo].[vw_whatsDM_templates]
+  WHERE [Nome] LIKE '{tamplateNome}'";
+            try
+            {
+                SqlCommand cmd = new SqlCommand(_script, connBaseWhatsapp);
+                SqlDataAdapter data = new SqlDataAdapter(cmd);
+                DataTable tb = new DataTable();
+                data.Fill(tb);
+                Template template = null;
+                
+                foreach (var item in tb.AsEnumerable())
+                {
+                    template = new Template()
+                    {
+                        Id = item.Field<int>("Id"),
+                        Gerador_id = item.Field<int>("Gerador_id"),
+                        Tipo = item.Field<string>("Tipo"),
+                        Nome = item.Field<string>("Nome"),
+                        ParameterQuant = item.Field<int>("ParameterQuant"),
+                        Conteudo = item.Field<string>("Conteudo"),
+                        Criterios = item.Field<string>("Criterios")
+                    };
+                }
+                return template;
+            }
+            catch (Exception ex)
+            {
+                Program.Log($@"Erro Function: ProcedureFiananceiroExtra
+{ex.Message}
+_scriptParameter:
+{_script}");
+                return null;
+            }
+            finally
+            {
+                connBaseWhatsapp.Close();
+            }
+        }
         public static List<MessageSend> GetListEnvio_DbSoft()
         {
             try
@@ -57,7 +104,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
                         IdSuporte = item.Field<int>("Id_Suporte"),
                         IdCliente = item.Field<int>("Id_Cliente"),
                         NumTelefone = "55" + item.Field<string>("NumeroWhatsapp"),
-                        Template = item.Field<string>("TipoTemplete"),
+                        Template = new Template().GetTemplate(item.Field<string>("TipoTemplete")),
                         Return = "",
                         Message = "",
                         Send = false
@@ -104,8 +151,8 @@ Data Source=ragnar\SQLEXPRESS,5433");
                         IdCliente = item.Field<int>("IdCliente"),
                         Message = item.Field<string>("message"),
                         NumTelefone = item.Field<string>("numTelefone"),
-                        Template = item.Field<string>("Template")                        
-                });
+                        Template = new Template().GetTemplate(item.Field<string>("Template"))
+                    });
                 }
                 return _list.Count > 0 ? _list : null;
             }
@@ -140,7 +187,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
         }
         public static string[] BodyMessage(MessageSend message)
         {
-            string _script = $@"SELECT * FROM [vw_whatsDM_templates] WHERE [Nome] like '{message.Template}'";
+            string _script = $@"SELECT * FROM [vw_whatsDM_templates] WHERE [Nome] like '{message.Template.Nome}'";
             try
             {
                 connBaseWhatsapp.Open();
@@ -290,7 +337,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
         {
             foreach (var item in strSQL)
             {
-                conn = conn == null ? connBaseLocal : conn;                
+                conn = conn == null ? connBaseLocal : conn;
                 // Create a command and set its connection    
                 OleDbCommand cmdQry = new OleDbCommand(item, conn);
                 // Open the connection and execute the select command.    
@@ -312,9 +359,9 @@ Data Source=ragnar\SQLEXPRESS,5433");
                 // The connection is automatically closed becasuse of using block.
             }
         }
-        public static async Task ExeQueryAccess(string strSQL, OleDbConnection conn = null)
+        public static Task ExeQueryAccess(string strSQL, OleDbConnection conn = null)
         {
-            conn = conn == null ? connBaseLocal : conn;            
+            conn = conn == null ? connBaseLocal : conn;
             // Create a command and set its connection    
             OleDbCommand cmdQry = new OleDbCommand(strSQL, conn);
             // Open the connection and execute the select command.    
@@ -323,11 +370,12 @@ Data Source=ragnar\SQLEXPRESS,5433");
                 // Open connecton    
                 conn.Open();
                 // Execute command    
-                await cmdQry.ExecuteReaderAsync();
+                cmdQry.ExecuteReader();
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                Task.Factory.StartNew(() => { MessageBox.Show($"ExeQueryAccess ERRO:{ex.Message}"); });
+                return Task.Factory.StartNew(() => { MessageBox.Show($"ExeQueryAccess ERRO:{ex.Message}"); });
             }
             finally
             {
@@ -338,7 +386,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
         public static List<string> SelectAccess(string strSQL, string campo, OleDbConnection conn = null)
         {
             List<string> _list = new List<string>();
-            conn = conn == null ? connBaseLocal : conn;            
+            conn = conn == null ? connBaseLocal : conn;
             OleDbCommand cmdQry = new OleDbCommand(strSQL, conn);
             try
             {
@@ -358,16 +406,18 @@ Data Source=ragnar\SQLEXPRESS,5433");
             finally
             {
                 conn.Close();
-            }            
+            }
         }
-        public static List<Sessoes> GetSessoes(string strSQL, OleDbConnection conn = null)
-        {  
+        public static List<Sessoes> GetSessoes()
+        {
             try
             {
-                List<Sessoes> _list = new List<Sessoes>();
-                conn = conn == null ? connBaseLocal : conn;                
-                OleDbCommand _cmd = new OleDbCommand(strSQL, conn);
-                OleDbDataAdapter _data = new OleDbDataAdapter(_cmd);                
+                string _script = $@"
+SELECT Id, IdSuporte, NomeSuporte, Setor, Porta, WhatsSuporte, Ativo
+FROM TB_Sessoes WHERE WhatsSuporte is not null;";
+                List<Sessoes> _list = new List<Sessoes>();                
+                OleDbCommand _cmd = new OleDbCommand(_script, connBaseLocal);
+                OleDbDataAdapter _data = new OleDbDataAdapter(_cmd);
                 DataTable _tb = new DataTable();
                 _data.Fill(_tb);
 
@@ -377,11 +427,13 @@ Data Source=ragnar\SQLEXPRESS,5433");
                     {
                         Id = item.Field<int>("Id"),
                         IdSuporte = item.Field<int>("IdSuporte"),
+                        Nome = item.Field<string>("NomeSuporte"),
+                        Setor = item.Field<string>("Setor"),
                         NumSessao = item.Field<string>("WhatsSuporte"),
                         Porta = item.Field<string>("Porta"),
                         Ativo = item.Field<bool>("Ativo")
-                    });                    
-                }   
+                    });
+                }
                 return _list;
             }
             catch (Exception ex)
@@ -391,7 +443,7 @@ Data Source=ragnar\SQLEXPRESS,5433");
             }
             finally
             {
-                conn.Close();
+                connBaseLocal.Close();
             }
         }
         private static Extras ProcedureFiananceiroExtra(int registroCliente, SqlConnection sqlConnection = null)
@@ -477,11 +529,11 @@ SELECT [id]
                 connBaseWhatsapp.Close();
             }
         }
-        public static void SetEvento(EventoLog eventoLog)
+        public static async void SetEvento(EventoLog eventoLog)
         {
             string _script = "";
 
-            ExeQueryAccess(_script);
+            await ExeQueryAccess(_script);
         }
     }
 }
