@@ -37,9 +37,12 @@ namespace WhatspApp_Disparador
         private static void WhatsSoft() 
         {
             List<MessageSend> _messageSends = MessageSend.SelectDb_Soft();
-            if (_messageSends != null && _messageSends.Count > 0)
+
+            int _countMessage = _messageSends.Count;
+
+            if (_messageSends != null && _countMessage > 0)
             {
-                Console.Write($"Novo lote({_messageSends.Count}):{DateTime.Now}...");
+                Console.WriteLine($"Novo lote({_countMessage}):{DateTime.Now}...");
                 foreach (var item in _messageSends)
                 {
                     if (item.Template != null)
@@ -51,9 +54,13 @@ namespace WhatspApp_Disparador
                             {
                                 if (!string.IsNullOrEmpty(msg[i]))
                                 {
+                                    Console.Write($"{_countMessage--} ");
                                     item.Message = msg[i].Trim();
                                     item.InsertDb();
+                                    Console.Write("Insert WhatsDM ");
                                     item.UpdateDbSoftcom();
+                                    Console.Write("Update Agenda");
+                                    Console.WriteLine();
                                 }
                             }
                         }
