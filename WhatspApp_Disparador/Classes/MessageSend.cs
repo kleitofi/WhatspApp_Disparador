@@ -68,6 +68,26 @@ NOW()
 
             await SQL.ExeQueryMySQL(_string);
         }
+        public async void InsertLoteDb()
+        {
+            string _string = $@"
+INSERT INTO `dbwhatsdm`.`messagesend` (
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+VALUES (
+NULL,
+'{Guid}' ,
+'{IdSuporte}' ,
+'{IdCliente}' ,
+'{Template.Nome}' ,
+'{NumTelefone}' ,
+'{Message}' ,
+'{Return}' ,
+'{(Send ? '1' : '0')}' ,
+NOW()
+);";
+
+            await SQL.ExeQueryMySQL(_string);
+        }
         public async void UpdateDb()
         {
             string _string = $@"
@@ -79,6 +99,7 @@ WHERE Id = '{Id}'
 ";
             await SQL.ExeQueryMySQL(_string);
         }
+
         private Sessoes GetSessoes(JsonArray sender)
         {
             Sessoes _sessoes = null;
