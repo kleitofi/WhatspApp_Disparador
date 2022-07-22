@@ -24,6 +24,7 @@ namespace WhatspApp_Disparador
         {
             while (true)
             {
+                Console.Clear();
                 //Select mensagens e tratamenta do copor da mensagem insere o MySQL DB_WhatsDM
                 WhatsSoft();
                 //Envio das mensagens para API

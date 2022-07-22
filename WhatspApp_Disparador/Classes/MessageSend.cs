@@ -23,7 +23,7 @@ namespace WhatspApp_Disparador
         public int IdCliente { get; set; }
         public Template Template { get; set; }
         public string NumTelefone { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; }        
         public string Return { get; set; }
         public Sessoes Sender
         {
@@ -88,6 +88,55 @@ NOW()
 
             await SQL.ExeQueryMySQL(_string);
         }
+        public static async void InsertLoteDb(List<MessageSend> list_MessageSend)
+        {
+            string _script = "";
+            string _head = $@"INSERT INTO `dbwhatsdm`.`messagesend` (
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+VALUES
+"; ;
+            string _rows = "";            
+            if (list_MessageSend != null)
+            {
+                //tamanho da lista de dados
+                int _size = list_MessageSend.Count;
+                //comprimento maximo de linha para insert
+                int _length = 1000;
+
+                foreach (MessageSend item in list_MessageSend)
+                {
+                    _length--; _size--;
+
+                    _rows +=
+$@",(
+NULL,
+'{item.Guid}' ,
+'{item.IdSuporte}' ,
+'{item.IdCliente}' ,
+'{item.Template.Nome}' ,
+'{item.NumTelefone}' ,
+'{item.Message}' ,
+'{item.Return}' ,
+'{(item.Send ? '1' : '0')}' ,
+NOW()
+)";
+                    if (_length == 0 || _size == 0)
+                    {
+                        _length = 1000;
+
+                        _script = _script.Trim();
+                        _rows = _rows.Length > 0 ? _rows.Remove(0, 1) : "";
+                        _rows = _rows.Trim();
+                        _rows += ";";
+                        _script += _head + _rows;
+
+                        _rows = "";
+                    }
+                }
+                await SQL.ExeQueryMySQL(_script);
+                //Console.WriteLine(_script);
+            }
+        }
         public async void UpdateDb()
         {
             string _string = $@"
@@ -99,7 +148,6 @@ WHERE Id = '{Id}'
 ";
             await SQL.ExeQueryMySQL(_string);
         }
-
         private Sessoes GetSessoes(JsonArray sender)
         {
             Sessoes _sessoes = null;
