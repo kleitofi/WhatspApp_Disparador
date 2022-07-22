@@ -242,6 +242,11 @@ _scriptParameter:
 
                             _conteudo = _conteudo.Replace("{{" + i + "}}", ExeQuerysProcedure(_parametroValor, message.IdCliente));
                         }
+                        else if (_parametroValor.Contains("pa_get_cliente"))
+                        {
+
+                            _conteudo = _conteudo.Replace("{{" + i + "}}", ExeQuerysProcedure(_parametroValor, message.IdCliente));
+                        }
                     }
                     string[] _conteudoRetorno;
                     if (_conteudo.Contains("\\"))
