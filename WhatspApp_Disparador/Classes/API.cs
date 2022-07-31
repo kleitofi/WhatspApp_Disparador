@@ -55,12 +55,18 @@ namespace WhatspApp_Disparador
                 return "Erro !";
             }
         }
-        public static void TesteSend()
+        public static void TesteSend(string numSessao = null)
         {
             List<Sessoes> _ListSessoes = Sessoes.GetList();
+
+            if (numSessao != null)
+            {
+                _ListSessoes = _ListSessoes.Where(x => x.NumSessao == numSessao).ToList();
+            }
+
             if (_ListSessoes != null)
             {
-                foreach (var item in Sessoes.GetList())
+                foreach (var item in _ListSessoes)
                 {
                     string _retorno = WhatDM_Post(new MessageSend
                     {

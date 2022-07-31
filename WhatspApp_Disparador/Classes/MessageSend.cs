@@ -23,7 +23,7 @@ namespace WhatspApp_Disparador
         public int IdCliente { get; set; }
         public Template Template { get; set; }
         public string NumTelefone { get; set; }
-        public string Message { get; set; }        
+        public string[] Message { get; set; }        
         public string Return { get; set; }
         public Sessoes Sender
         {
@@ -115,7 +115,7 @@ NULL,
 '{item.IdCliente}' ,
 '{item.Template.Nome}' ,
 '{item.NumTelefone}' ,
-'{item.Message}' ,
+'{item.Message[0]}' ,
 '{item.Return}' ,
 '{(item.Send ? '1' : '0')}' ,
 NOW()
