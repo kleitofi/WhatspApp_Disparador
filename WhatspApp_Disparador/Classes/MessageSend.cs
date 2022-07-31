@@ -23,7 +23,8 @@ namespace WhatspApp_Disparador
         public int IdCliente { get; set; }
         public Template Template { get; set; }
         public string NumTelefone { get; set; }
-        public string[] Message { get; set; }        
+        //public string[] Message { get; set; }
+        public JsonValue Json { get; set; }
         public string Return { get; set; }
         public Sessoes Sender
         {
@@ -39,6 +40,9 @@ namespace WhatspApp_Disparador
         }
         public bool Send { get; set; }
         public DateTime DateTime { get; set; }
+        public MessageSend() 
+        {
+        }
         public async void UpdateDbSoftcom()
         {
             string _string = $@"
@@ -52,7 +56,7 @@ where id = {Id}";
         {
             string _string = $@"
 INSERT INTO `dbwhatsdm`.`messagesend` (
-    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Json`, `Return`, `Send`, `DateTime`) 
 VALUES (
 NULL,
 '{Guid}' ,
@@ -60,7 +64,7 @@ NULL,
 '{IdCliente}' ,
 '{Template.Nome}' ,
 '{NumTelefone}' ,
-'{Message}' ,
+'{Json}' ,
 '{Return}' ,
 '{(Send ? '1' : '0')}' ,
 NOW()
@@ -72,7 +76,7 @@ NOW()
         {
             string _string = $@"
 INSERT INTO `dbwhatsdm`.`messagesend` (
-    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Json`, `Return`, `Send`, `DateTime`) 
 VALUES (
 NULL,
 '{Guid}' ,
@@ -80,7 +84,7 @@ NULL,
 '{IdCliente}' ,
 '{Template.Nome}' ,
 '{NumTelefone}' ,
-'{Message}' ,
+'{Json}' ,
 '{Return}' ,
 '{(Send ? '1' : '0')}' ,
 NOW()
@@ -92,7 +96,7 @@ NOW()
         {
             string _script = "";
             string _head = $@"INSERT INTO `dbwhatsdm`.`messagesend` (
-    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Json`, `Return`, `Send`, `DateTime`) 
 VALUES
 "; ;
             string _rows = "";            
@@ -115,7 +119,7 @@ NULL,
 '{item.IdCliente}' ,
 '{item.Template.Nome}' ,
 '{item.NumTelefone}' ,
-'{item.Message[0]}' ,
+'{item.Json}' ,
 '{item.Return}' ,
 '{(item.Send ? '1' : '0')}' ,
 NOW()
@@ -173,6 +177,15 @@ WHERE Id = '{Id}'
         public static List<MessageSend> SelectDb_DM()
         {
             return SQL.GetListEnvio_DbWhatsDM();
+        }
+        public string JsonBody() 
+        {
+            new Api_DM() 
+            {
+                message = Template.
+            }
+            Template.Conteudo
+                return "";
         }
 
     }

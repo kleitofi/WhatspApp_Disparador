@@ -153,7 +153,7 @@ _scriptParameter:
                         Guid = item.Field<Guid>("Guid"),
                         IdSuporte = item.Field<int>("IdSuporte"),
                         IdCliente = item.Field<int>("IdCliente"),
-                        Message = new[] { item.Field<string>("message") },
+                        //Message = new[] { item.Field<string>("message") },
                         NumTelefone = item.Field<string>("numTelefone"),
                         Template = new Template().GetTemplate(item.Field<string>("Template"))
                     });
@@ -189,6 +189,7 @@ _scriptParameter:
                 connBaseWhatsAPI.Close();
             }
         }
+
         public static string[] BodyMessage(MessageSend message)
         {
             string _script = $@"SELECT * FROM [vw_whatsDM_templates] WHERE [Nome] like '{message.Template.Nome}'";
@@ -281,6 +282,7 @@ _scriptParameter:
                 connBaseWhatsapp.Close();
             }
         }
+        
         public static string ExeQuerysProcedure(string strSQL, int registroCliente, SqlConnection sqlConnection = null)
         {
             try

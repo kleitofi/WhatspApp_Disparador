@@ -23,9 +23,10 @@ namespace WhatspApp_Disparador
         [STAThread]
         static void Main()
         {
+            //Api_DM.SendTeste(); ;
             while (true)
             {
-                //Console.Clear();
+                Console.Clear();
                 //Select mensagens e tratamenta do copor da mensagem insere o MySQL DB_WhatsDM
                 WhatsSoft();
                 //Envio das mensagens para API
@@ -66,7 +67,7 @@ namespace WhatspApp_Disparador
                                 Console.Write("Update Agenda");
                                 Console.WriteLine();
                             }
-                            item.Message = msg;
+                            //item.Json = msg;
                         }
                         else
                         {

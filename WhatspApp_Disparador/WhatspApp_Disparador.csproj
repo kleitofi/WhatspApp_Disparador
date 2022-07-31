@@ -119,7 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\API.cs" />
-    <Compile Include="Classes\Message.cs" />
+    <Compile Include="Classes\Api_DM.cs" />
     <Compile Include="Classes\MessageSend.cs" />
     <Compile Include="Classes\Template.cs" />
     <Compile Include="Objetos\EventoLog.cs" />

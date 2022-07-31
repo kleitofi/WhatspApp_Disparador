@@ -1,25 +1,48 @@
 ﻿using Flurl.Http;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Text.Json.Nodes;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 
 namespace WhatspApp_Disparador
 {
-    public static class API
+    public class Api_DM
     {
-        /// <summary>
-        /// Função principal onde passa a classe messageSend e converte em messageSendWhats para setar no Disparo do WhatsDM
-        /// </summary>
-        /// <param name="messageSend"></param>
+        public string number { get; set; }
+        public List<string> message { get; set; }
+        public string file { get; set; }
+        public string sender { get; set; }
+
+        public static async Task<string> SendTeste()
+        {
+            Api_DM api_DM = new Api_DM
+            {
+                number = "558387183158",
+                message = new List<string> { "c# teste 1", "c# teste 2" },
+                file = "\\\\ragnar\\WhatsDM_FTP\\Imagens\\Softcom.png",
+                sender = "83987183158"
+            };
+
+            string jsonString = JsonSerializer.Serialize(api_DM);
+            try
+            {
+                var responseString = await $@"http://ragnar:{"8999"}/send-message"
+                     .ConfigureRequest(settings => settings.Timeout = TimeSpan.FromSeconds(4))
+                     .PostJsonAsync(jsonString)
+                     .ReceiveString();
+                await Task.CompletedTask;
+
+                return responseString;
+            }
+            catch (Exception ex)
+            {
+                Program.Log($"SendTeste:{ex.Message}\n{jsonString}");
+                return "Erro !";
+            }            
+        }
         public static async void SendDM(MessageSend messageSend)
         {
             //################################|ENVIO|################################
@@ -36,13 +59,8 @@ namespace WhatspApp_Disparador
             try
             {
                 var responseString = await $@"http://ragnar:{message.Sender.Porta}/send-message"
-                    .ConfigureRequest(settings => settings.Timeout = TimeSpan.FromSeconds(4))
-                     .PostUrlEncodedAsync(new
-                     {
-                         number = message.NumTelefone,
-                         //message = message.Message,
-                         sender = message.Sender.NumSessao
-                     })
+                     .ConfigureRequest(settings => settings.Timeout = TimeSpan.FromSeconds(4))
+                     .PostJsonAsync(message.Json)
                      .ReceiveString();
 
                 await Task.CompletedTask;
@@ -51,7 +69,7 @@ namespace WhatspApp_Disparador
             }
             catch (Exception ex)
             {
-                Program.Log($"MessageSendWhatsDM:{ex.Message}\n{message}");
+                Program.Log($"WhatDM_Post:{ex.Message}\n{message.Json}");
                 return "Erro !";
             }
         }
