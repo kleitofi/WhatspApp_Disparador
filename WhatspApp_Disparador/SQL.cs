@@ -85,6 +85,8 @@ _scriptParameter:
             {
                 string _script = $@"select * from vw_whatsDM_envios";
 
+                _script = Program.Homologacao ? "select * from vw_whatsDM_envios where Id_Suporte = 631" : _script;
+
                 connBaseWhatsapp.Open();
 
                 SqlCommand _cmd = new SqlCommand(_script, connBaseWhatsapp);
@@ -106,7 +108,7 @@ _scriptParameter:
                         NumTelefone = "55" + item.Field<string>("NumeroWhatsapp"),
                         Template = new Template().GetTemplate(item.Field<string>("TipoTemplete")),
                         Return = "",
-                        Message = "",
+                        //Message = "",
                         Send = false
                     };
 
@@ -130,7 +132,9 @@ _scriptParameter:
             try
             {
                 string _scriptSQL = "SELECT * FROM `messagesend` WHERE `Send` = false";
-                //Console.WriteLine("ExeQuerysSelectSQL:" + scriptSQL);
+
+                _scriptSQL = Program.Homologacao ? "SELECT * FROM `messagesend` WHERE `Send` = false and `IdSuporte` = 631" : _scriptSQL;
+
                 connBaseWhatsAPI.Open();
                 MySqlCommand _cmd = new MySqlCommand(_scriptSQL, connBaseWhatsAPI);
 
@@ -149,7 +153,7 @@ _scriptParameter:
                         Guid = item.Field<Guid>("Guid"),
                         IdSuporte = item.Field<int>("IdSuporte"),
                         IdCliente = item.Field<int>("IdCliente"),
-                        Message = item.Field<string>("message"),
+                        Message = new[] { item.Field<string>("message") },
                         NumTelefone = item.Field<string>("numTelefone"),
                         Template = new Template().GetTemplate(item.Field<string>("Template"))
                     });
@@ -242,10 +246,11 @@ _scriptParameter:
 
                             _conteudo = _conteudo.Replace("{{" + i + "}}", ExeQuerysProcedure(_parametroValor, message.IdCliente));
                         }
-                        else if (_parametroValor.Contains("pa_get_cliente"))
+                        else if (_parametroValor.Contains("file"))
                         {
+                            string[] _parametroSplit = _parametroValor.Split(':');
 
-                            _conteudo = _conteudo.Replace("{{" + i + "}}", ExeQuerysProcedure(_parametroValor, message.IdCliente));
+                            //_conteudo = _conteudo.Replace("{{" + i + "}}", ExeQuerysProcedure(_parametroValor, message.IdCliente));
                         }
                     }
                     string[] _conteudoRetorno;

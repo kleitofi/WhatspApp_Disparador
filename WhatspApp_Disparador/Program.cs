@@ -16,6 +16,7 @@ namespace WhatspApp_Disparador
 {
     static class Program
     {
+        public static bool Homologacao = true;
         /// <summary>
         /// Ponto de entrada principal para o aplicativo.
         /// </summary>
@@ -24,12 +25,13 @@ namespace WhatspApp_Disparador
         {
             while (true)
             {
-                Console.Clear();
+                //Console.Clear();
                 //Select mensagens e tratamenta do copor da mensagem insere o MySQL DB_WhatsDM
                 WhatsSoft();
                 //Envio das mensagens para API
                 WhatsDM();
-                Thread.Sleep(TimeSpan.FromSeconds(30));
+                Console.WriteLine("Sleep...");
+                Thread.Sleep(TimeSpan.FromSeconds(Homologacao ? 5 : 30));
             }
         }
         /// <summary>
@@ -42,7 +44,7 @@ namespace WhatspApp_Disparador
             int _countMessage = _messageSends.Count;
 
             if (_messageSends != null && _countMessage > 0)
-            {
+            {                
                 Console.WriteLine($"Novo lote({_countMessage}):{DateTime.Now}...");
                 foreach (var item in _messageSends)
                 {
@@ -51,31 +53,37 @@ namespace WhatspApp_Disparador
                         string[] msg = SQL.BodyMessage(item);
                         if (msg != null)
                         {
+                            Console.Write($"{_countMessage--} ");
                             for (int i = 0; i < msg.Length; i++)
                             {
                                 if (!string.IsNullOrEmpty(msg[i]))
-                                {
-                                    Console.Write($"{_countMessage--} ");
-                                    item.Message = msg[i].Trim();
-                                    item.InsertDb();
-                                    Console.Write("Insert WhatsDM ");
-                                    item.UpdateDbSoftcom();
-                                    Console.Write("Update Agenda");
-                                    Console.WriteLine();
+                                {                                    
+                                    msg[i] = msg[i].Trim();
                                 }
+                                //item.InsertDb();
+                                //Console.Write("Insert WhatsDM ");                              
+                                
+                                Console.Write("Update Agenda");
+                                Console.WriteLine();
                             }
+                            item.Message = msg;
                         }
                         else
                         {
                             item.Return = "Erro BodyMessage";
-                            item.UpdateDbSoftcom();
+                            
                         }
+                        item.UpdateDbSoftcom();
+
                     }
                     else
                     {
                         Console.WriteLine("Template NULL");
                     }
-                }
+                }                
+                MessageSend.InsertLoteDb(_messageSends);
+                Console.Write("Insert WhatsDM ");
+
                 Console.WriteLine("Insert OK!");
             }
         }
