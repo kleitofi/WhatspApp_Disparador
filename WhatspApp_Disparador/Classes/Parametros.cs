@@ -11,17 +11,14 @@ namespace WhatspApp_Disparador
         public int seq { get; set; }
         public int id_template { get; set; }
         public string text { get; set; }
-        public int posicao { get; set; }
-        public Parametros GetParametros(int Id)
+        public int posicao { get; set; }        
+        public Parametros(int IdTemplate) 
         {
-            string _script = 
-    $@"SELECT [idtemplete]
-      ,[text]
-      ,[posicao]
-      ,[seq]
-  FROM [blip_parametros_gerar]
-  WHERE [idtemplete] = {Id}";            
-            return null;
+            id_template = IdTemplate;
+        }
+        public List<Parametros> GetParametros()
+        {
+            return SQL.GetParametros(id_template);
         }
 
     }

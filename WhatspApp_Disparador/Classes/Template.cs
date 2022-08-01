@@ -8,75 +8,107 @@ namespace WhatspApp_Disparador
 {
     public class Template
     {
+        private MessageSend MessageSend { get; set; }
+        public List<Parametros> Parametros
+        {
+            get
+            {
+                return new Parametros(Id).GetParametros();
+            }
+            //set { parametros = value; }
+        }
         public int Id { get; set; }
         public int Gerador_id { get; set; }
         public string Tipo { get; set; }
         public string Nome { get; set; }
         public int ParameterQuant { get; set; }
-        public Parametros[] Parametros { get; set; }
         public string Conteudo { get; set; }
         public string Criterios { get; set; }
-        public Template GetTemplate(string templateNome) 
+        public Template(MessageSend messageSend)
         {
-            return SQL.GetTemplate(templateNome);
-        }        
-        public string JsonBody() 
+            MessageSend = messageSend;
+        }
+
+        public List<string> TratarConteudo(int registroCliente, int ocorrencia)
         {
-            List<Parametros> _listParametros = SQL.GetParametros(_id);
-            for (int i = 1; i <= _parameterquant; i++)
+            try
             {
-                string _parametroValor =
-                _listParametros.Where(x => x.posicao == i).First().text;
+                string _body = Conteudo;
+                string _file = "";
 
-                if (_parametroValor.Contains("pa_get_cliente_financeiro"))
+                if (string.IsNullOrEmpty(_body)) throw new Exception(@"{""Erro"":""Cliente:{" + registroCliente + " conteudo null}");
+
+                for (int i = 1; i <= ParameterQuant; i++)
                 {
-                    string[] _parametroSplit = _parametroValor.Split('.');
+                    string _parametroValor =
+                Parametros.Where(x => x.posicao == i).First().text;
 
-                    Extras _extras = ProcedureFiananceiroExtra(message.IdCliente);
-                    if (_extras == null)
+                    if (_parametroValor.Contains("pa_get_cliente_financeiro"))
                     {
-                        return null;
+                        string[] _parametroSplit = _parametroValor.Split('.');
+
+                        Extras _extras = SQL.ProcedureFiananceiroExtra(registroCliente);
+                        if (_extras == null)
+                        {
+                            _body = null;
+                            throw new Exception(@"{""Erro"":""Cliente:{" + registroCliente + " not Financeiro}");
+                        }
+                        switch (_parametroSplit[1])
+                        {
+                            case "pix":
+                                _body = _body.Replace("{{" + i + "}}", _extras.pix);
+                                break;
+                            case "valor":
+                                _body = _body.Replace("{{" + i + "}}", _extras.valor);
+                                break;
+                            default:
+                                break;
+                        }
                     }
-                    switch (_parametroSplit[1])
+                    else if (_parametroValor.Contains("pa_get_cliente"))
                     {
-                        case "pix":
-                            _conteudo = _conteudo.Replace("{{" + i + "}}", _extras.pix);
-                            break;
-                        case "valor":
-                            _conteudo = _conteudo.Replace("{{" + i + "}}", _extras.valor);
-                            break;
-                        default:
-                            break;
+                        _body = _body.Replace("{{" + i + "}}", SQL.ExeQuerysProcedure(_parametroValor, registroCliente));
+                    }
+                    else if (_parametroValor.Contains("file"))
+                    {
+                        string[] _parametroSplit = _parametroValor.Split(':');
+
+                        _file = _parametroSplit[1];
                     }
                 }
-                else if (_parametroValor.Contains("pa_get_cliente"))
-                {
-
-                    _conteudo = _conteudo.Replace("{{" + i + "}}", ExeQuerysProcedure(_parametroValor, message.IdCliente));
-                }
-                else if (_parametroValor.Contains("file"))
-                {
-                    string[] _parametroSplit = _parametroValor.Split(':');
-
-                    //_conteudo = _conteudo.Replace("{{" + i + "}}", ExeQuerysProcedure(_parametroValor, message.IdCliente));
-                }
+                return Dividir_Conteudo(_body);
             }
-            string[] _conteudoRetorno;
-            if (_conteudo.Contains("\\"))
+            catch (Exception ex)
             {
-                _conteudoRetorno = _conteudo.Split('\\');
-                for (int i = 0; i < _conteudoRetorno.Length; i++)
+                Program.Log($"Erro Function: Body \n{ex.Message}");
+                return null;
+            }
+        }
+        public List<string> Dividir_Conteudo(string conteudo) 
+        {
+            List<string> _conteudoRetorno = null;
+            //string[] _conteudoRetorno;
+            if (conteudo.Contains("\\"))
+            {
+                string[] _slitConteudo = conteudo.Split('\\');
+                for (int i = 0; i < _slitConteudo.Length; i++)
                 {
-                    //Console.WriteLine(_conteudoRetorno[i]);
+                    _slitConteudo[i] = _slitConteudo[i].Trim();
+
+                    if (!string.IsNullOrEmpty(_slitConteudo[i]) && _slitConteudo[i] != "")
+                    {
+                        _conteudoRetorno.Add(_slitConteudo[i]);
+                    }                    
                 }
             }
             else
             {
-                _conteudoRetorno = new string[] { _conteudo };
+                _conteudoRetorno.Add(conteudo);
             }
+
+
             return _conteudoRetorno;
-            return "";
         }
     }
-    
+
 }

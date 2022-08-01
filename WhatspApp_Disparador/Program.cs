@@ -23,7 +23,9 @@ namespace WhatspApp_Disparador
         [STAThread]
         static void Main()
         {
-            //Api_DM.SendTeste(); ;
+            //Api_DM.SendTeste(); 
+
+            //new MessageSend().teste();
             while (true)
             {
                 Console.Clear();
@@ -40,7 +42,8 @@ namespace WhatspApp_Disparador
         /// </summary>
         private static void WhatsSoft() 
         {
-            List<MessageSend> _messageSends = MessageSend.SelectDb_Soft();
+            
+            List<MessageSend> _messageSends = new MessageSend().GetListMessageSends();
 
             int _countMessage = _messageSends.Count;
 
@@ -71,11 +74,9 @@ namespace WhatspApp_Disparador
                         }
                         else
                         {
-                            item.Return = "Erro BodyMessage";
-                            
+                            item.Return = "Erro BodyMessage";                            
                         }
                         item.UpdateDbSoftcom();
-
                     }
                     else
                     {

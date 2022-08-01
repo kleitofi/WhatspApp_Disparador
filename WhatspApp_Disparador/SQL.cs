@@ -31,7 +31,8 @@ Data Source=ragnar\SQLEXPRESS,5433");
 
         private static MySqlConnection connBaseWhatsAPI = new MySqlConnection(
             "Server=ragnar; port=3306 ;Database=dbWhatsDM; Uid=softcom; Pwd=qaz123;convert zero datetime=True");
-        public static Template GetTemplate(string tamplateNome)
+
+        public static List<Template> GetTemplateList()
         {
             string _script = $@"
 SELECT [Id]
@@ -41,19 +42,18 @@ SELECT [Id]
       ,[ParameterQuant]
       ,[Conteudo]
       ,[Criterios]
-  FROM [dbo].[vw_whatsDM_templates]
-  WHERE [Nome] LIKE '{tamplateNome}'";
+  FROM [dbo].[vw_whatsDM_templates]";
             try
             {
-                SqlCommand cmd = new SqlCommand(_script, connBaseWhatsapp);
-                SqlDataAdapter data = new SqlDataAdapter(cmd);
-                DataTable tb = new DataTable();
-                data.Fill(tb);
-                Template template = null;
-                
-                foreach (var item in tb.AsEnumerable())
+                SqlCommand _cmd = new SqlCommand(_script, connBaseWhatsapp);
+                SqlDataAdapter _data = new SqlDataAdapter(_cmd);
+                DataTable _tb = new DataTable();
+                _data.Fill(_tb);
+                List<Template> _listTemplate = null;
+
+                foreach (var item in _tb.AsEnumerable())
                 {
-                    template = new Template()
+                    _listTemplate.Add(new Template(new MessageSend())
                     {
                         Id = item.Field<int>("Id"),
                         Gerador_id = item.Field<int>("Gerador_id"),
@@ -62,9 +62,9 @@ SELECT [Id]
                         ParameterQuant = item.Field<int>("ParameterQuant"),
                         Conteudo = item.Field<string>("Conteudo"),
                         Criterios = item.Field<string>("Criterios")
-                    };
+                    });
                 }
-                return template;
+                return _listTemplate;
             }
             catch (Exception ex)
             {
@@ -79,13 +79,58 @@ _scriptParameter:
                 connBaseWhatsapp.Close();
             }
         }
+        public static Template GetTemplate(string nomeTemplate)
+        {
+            string _script = $@"
+SELECT [Id]
+      ,[Gerador_id]
+      ,[Tipo]
+      ,[Nome]
+      ,[ParameterQuant]
+      ,[Conteudo]
+      ,[Criterios]
+  FROM [dbo].[vw_whatsDM_templates]
+  WHERE [Nome] LIKE '{nomeTemplate}'";
+            try
+            {
+                SqlCommand cmd = new SqlCommand(_script, connBaseWhatsapp);
+                SqlDataAdapter data = new SqlDataAdapter(cmd);
+                DataTable tb = new DataTable();
+                data.Fill(tb);
+                Template template = null;
+
+                foreach (var item in tb.AsEnumerable())
+                {
+                    template = new Template(new MessageSend())
+                    {
+                        Id = item.Field<int>("Id"),
+                        Gerador_id = item.Field<int>("Gerador_id"),
+                        Tipo = item.Field<string>("Tipo"),
+                        Nome = item.Field<string>("Nome"),
+                        ParameterQuant = item.Field<int>("ParameterQuant"),
+                        Conteudo = item.Field<string>("Conteudo"),
+                        Criterios = item.Field<string>("Criterios")
+                    };
+                }
+                return template;
+            }
+            catch (Exception ex)
+            {
+                Program.Log($"Erro Function: GetTemplate{ex.Message}\n_scriptParameter:{_script}");
+                return null;
+            }
+            finally
+            {
+                connBaseWhatsapp.Close();
+            }
+        }
         public static List<MessageSend> GetListEnvio_DbSoft()
         {
             try
             {
-                string _script = $@"select * from vw_whatsDM_envios";
+                string _script = $@"select * from vw_whatsDM_envios";               
 
-                _script = Program.Homologacao ? "select * from vw_whatsDM_envios where Id_Suporte = 631" : _script;
+                _script = Program.Homologacao ? "select * from vw_whatsDM_envios_testes" : _script;
 
                 connBaseWhatsapp.Open();
 
@@ -105,12 +150,13 @@ _scriptParameter:
                         Guid = Guid.NewGuid(),
                         IdSuporte = item.Field<int>("Id_Suporte"),
                         IdCliente = item.Field<int>("Id_Cliente"),
+                        NumOC = item.Field<int>("Num_OC"),
                         NumTelefone = "55" + item.Field<string>("NumeroWhatsapp"),
-                        Template = new Template().GetTemplate(item.Field<string>("TipoTemplete")),
-                        Return = "",
-                        //Message = "",
+                        Template = GetTemplate(item.Field<string>("TipoTemplete")),
+                        //Sender = GetSessoes().Where(x=> x.NumSessao == item.Field<string>("Sender"))
+                        Return = "",                        
                         Send = false
-                    };
+                    };                    
 
                     _list.Add(_msgTemp);
                 }
@@ -155,7 +201,7 @@ _scriptParameter:
                         IdCliente = item.Field<int>("IdCliente"),
                         //Message = new[] { item.Field<string>("message") },
                         NumTelefone = item.Field<string>("numTelefone"),
-                        Template = new Template().GetTemplate(item.Field<string>("Template"))
+                        //Template = new Template().GetTemplate(item.Field<string>("Template"))
                     });
                 }
                 return _list.Count > 0 ? _list : null;
@@ -282,7 +328,7 @@ _scriptParameter:
                 connBaseWhatsapp.Close();
             }
         }
-        
+
         public static string ExeQuerysProcedure(string strSQL, int registroCliente, SqlConnection sqlConnection = null)
         {
             try
@@ -427,7 +473,7 @@ _scriptParameter:
                 string _script = $@"
 SELECT Id, IdSuporte, NomeSuporte, Setor, Porta, WhatsSuporte, Ativo
 FROM TB_Sessoes WHERE WhatsSuporte is not null;";
-                List<Sessoes> _list = new List<Sessoes>();                
+                List<Sessoes> _list = new List<Sessoes>();
                 OleDbCommand _cmd = new OleDbCommand(_script, connBaseLocal);
                 OleDbDataAdapter _data = new OleDbDataAdapter(_cmd);
                 DataTable _tb = new DataTable();
@@ -458,7 +504,7 @@ FROM TB_Sessoes WHERE WhatsSuporte is not null;";
                 connBaseLocal.Close();
             }
         }
-        private static Extras ProcedureFiananceiroExtra(int registroCliente, SqlConnection sqlConnection = null)
+        public static Extras ProcedureFiananceiroExtra(int registroCliente, SqlConnection sqlConnection = null)
         {
             string _scriptParameter = $@"exec pa_softdm_get_financeiro {registroCliente}";
             try
@@ -497,9 +543,10 @@ _scriptParameter:
                 sqlConnection.Close();
             }
         }
-        private static List<Parametros> GetParametros(int Id)
+        public static List<Parametros> GetParametros(int Id)
         {
-            List<Parametros> _list_parametros = new List<Parametros>();
+            List<Parametros> _listParametros = new List<Parametros>();
+
             string _script = $@"
 SELECT [id]
       ,[text]
@@ -517,22 +564,20 @@ SELECT [id]
                 connBaseWhatsapp.Close();
                 foreach (var item in _tb.AsEnumerable())
                 {
-                    _list_parametros.Add(new Parametros()
+                    _listParametros.Add(new Parametros(Id)
                     {
                         id_template = item.Field<int>("id"),
                         posicao = item.Field<int>("posicao"),
                         text = item.Field<string>("text").ToString()
                     });
                 }
-                return _list_parametros;
+                return _listParametros;
             }
             catch (Exception ex)
             {
                 Task.Factory.StartNew(() =>
                 {
-                    MessageBox.Show($@"Erro Function: GetParametros
-{ex.Message}
-");
+                    MessageBox.Show($"Erro Function: GetParametros\n{ex.Message}");
                 });
                 return null;
             }

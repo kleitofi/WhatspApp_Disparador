@@ -20,10 +20,12 @@ namespace WhatspApp_Disparador
         public int Id { get; set; }
         public Guid Guid { get; set; }
         public int IdSuporte { get; set; }
+        public int Ocorrencia { get; set; }
         public int IdCliente { get; set; }
+        public int NumOC { get; set; }
         public Template Template { get; set; }
         public string NumTelefone { get; set; }
-        //public string[] Message { get; set; }
+        public List<string> Message { get; set; }
         public JsonValue Json { get; set; }
         public string Return { get; set; }
         public Sessoes Sender
@@ -39,10 +41,7 @@ namespace WhatspApp_Disparador
             set { sender = value; }
         }
         public bool Send { get; set; }
-        public DateTime DateTime { get; set; }
-        public MessageSend() 
-        {
-        }
+        public DateTime DateTime { get; set; }        
         public async void UpdateDbSoftcom()
         {
             string _string = $@"
@@ -99,7 +98,7 @@ NOW()
     `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Json`, `Return`, `Send`, `DateTime`) 
 VALUES
 "; ;
-            string _rows = "";            
+            string _rows = "";
             if (list_MessageSend != null)
             {
                 //tamanho da lista de dados
@@ -166,26 +165,29 @@ WHERE Id = '{Id}'
                     _sessoes = Sessoes.GetList().FirstOrDefault(x => x.Nome == item);
                 }
 
-                if( _sessoes != null ) return _sessoes;
+                if (_sessoes != null) return _sessoes;
             }
             return _sessoes;
         }
-        public static List<MessageSend> SelectDb_Soft()
+        public List<MessageSend> GetListMessageSends()
         {
-            return SQL.GetListEnvio_DbSoft();
+            List<MessageSend> _msgSend_List = SQL.GetListEnvio_DbSoft();
+
+            foreach (MessageSend item in _msgSend_List)
+            {
+                item.Message = item.Template.TratarConteudo(item.IdCliente, item.NumOC);                
+            }
+            return _msgSend_List;
         }
+
         public static List<MessageSend> SelectDb_DM()
         {
             return SQL.GetListEnvio_DbWhatsDM();
         }
-        public string JsonBody() 
+        public string JsonBody()
         {
-            new Api_DM() 
-            {
-                message = Template.
-            }
-            Template.Conteudo
-                return "";
+
+            return "";
         }
 
     }
