@@ -129,8 +129,8 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Objetos\Extras.cs" />
-    <Compile Include="Objetos\Parametros.cs" />
+    <Compile Include="Classes\Extras.cs" />
+    <Compile Include="Classes\Parametros.cs" />
     <Compile Include="Classes\Sessoes.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

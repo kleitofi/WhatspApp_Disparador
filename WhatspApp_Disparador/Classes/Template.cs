@@ -13,6 +13,7 @@ namespace WhatspApp_Disparador
         public string Tipo { get; set; }
         public string Nome { get; set; }
         public int ParameterQuant { get; set; }
+        public Parametros[] Parametros { get; set; }
         public string Conteudo { get; set; }
         public string Criterios { get; set; }
         public Template GetTemplate(string templateNome) 
