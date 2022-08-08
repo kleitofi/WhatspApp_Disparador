@@ -25,8 +25,8 @@ namespace WhatspApp_Disparador
         public int NumOC { get; set; }
         public Template Template { get; set; }
         public string NumTelefone { get; set; }
-        public List<string> Message { get; set; }
-        public JsonValue Json { get; set; }
+        public string File { get; set; }
+        public string Json { get; set; }
         public string Return { get; set; }
         public Sessoes Sender
         {
@@ -173,20 +173,14 @@ WHERE Id = '{Id}'
         {
             List<MessageSend> _msgSend_List = SQL.GetListEnvio_DbSoft();
 
-            foreach (MessageSend item in _msgSend_List)
-            {
-                item.Message = item.Template.TratarConteudo(item.IdCliente, item.NumOC);                
-            }
             return _msgSend_List;
         }
-
         public static List<MessageSend> SelectDb_DM()
         {
             return SQL.GetListEnvio_DbWhatsDM();
         }
         public string JsonBody()
         {
-
             return "";
         }
 

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace WhatspApp_Disparador
 {
     public class Template
     {
-        private MessageSend MessageSend { get; set; }
-        public List<Parametros> Parametros
+        public ICollection<Parametros> Parametros
         {
             get
             {
@@ -23,21 +23,41 @@ namespace WhatspApp_Disparador
         public string Nome { get; set; }
         public int ParameterQuant { get; set; }
         public string Conteudo { get; set; }
+        public string File { get; set; }        
+        public List<string> Message { get; set; }
         public string Criterios { get; set; }
-        public Template(MessageSend messageSend)
+        public JsonValue Json { get; set; }
+        public Template Get(string nome, int registroCliente, int ocorrencia) 
         {
-            MessageSend = messageSend;
+            Template _template = SQL.GetTemplate(nome);
+            {
+                _template.Message = _template.ReplaceConteudoSetParameter(registroCliente, ocorrencia);
+            };
+            
+            return _template;
         }
-
-        public List<string> TratarConteudo(int registroCliente, int ocorrencia)
+        private List<string> ReplaceConteudoSetParameter(int registroCliente, int ocorrencia) 
         {
+            Dictionary<int, string> _returnReplace = GetParameterPairs(registroCliente, ocorrencia);
+            
+            if (_returnReplace == null) return null;
+
+            foreach (var item in _returnReplace)
+            {
+                Conteudo = Conteudo.Replace("{{" + item.Key + "}}", item.Value);
+            }
+            return Dividir_Conteudo(Conteudo);
+        }
+        private Dictionary<int, string> GetParameterPairs(int registroCliente, int ocorrencia) 
+        {
+            //var _listKeyValuePair = new List<KeyValuePair<int, string>>();
+
+            Dictionary<int, string> _dictionary = new Dictionary<int, string>();
+
+            List<string> _parametros = new List<string>();
+
             try
             {
-                string _body = Conteudo;
-                string _file = "";
-
-                if (string.IsNullOrEmpty(_body)) throw new Exception(@"{""Erro"":""Cliente:{" + registroCliente + " conteudo null}");
-
                 for (int i = 1; i <= ParameterQuant; i++)
                 {
                     string _parametroValor =
@@ -47,46 +67,57 @@ namespace WhatspApp_Disparador
                     {
                         string[] _parametroSplit = _parametroValor.Split('.');
 
-                        Extras _extras = SQL.ProcedureFiananceiroExtra(registroCliente);
-                        if (_extras == null)
-                        {
-                            _body = null;
-                            throw new Exception(@"{""Erro"":""Cliente:{" + registroCliente + " not Financeiro}");
-                        }
+                        Extras _extras = SQL.ProcedureFiananceiroExtra(registroCliente) ??
+                            throw new Exception(new JsonObject
+                            {
+                                ["Date"] = DateTime.Now,
+                                ["Erro"] = $"exec pa_get_cliente_financeiro {registroCliente}"
+                            }.ToString());
+
                         switch (_parametroSplit[1])
                         {
                             case "pix":
-                                _body = _body.Replace("{{" + i + "}}", _extras.pix);
+                                _dictionary.Add(i, _extras.pix);                                
                                 break;
                             case "valor":
-                                _body = _body.Replace("{{" + i + "}}", _extras.valor);
+                                _dictionary.Add(i, _extras.valor);                                
+                                break;
+                            case "PDV":
                                 break;
                             default:
+                                _dictionary.Add(i, "null");
                                 break;
                         }
                     }
                     else if (_parametroValor.Contains("pa_get_cliente"))
                     {
-                        _body = _body.Replace("{{" + i + "}}", SQL.ExeQuerysProcedure(_parametroValor, registroCliente));
+                        _dictionary.Add(i, SQL.ExeQuerysProcedure(_parametroValor, registroCliente));                        
+                    }
+                    else if (_parametroValor.Contains("pa_get_oc"))
+                    {
+                        _dictionary.Add(i, SQL.ExeQuerysProcedure(_parametroValor, ocorrencia));                        
                     }
                     else if (_parametroValor.Contains("file"))
                     {
                         string[] _parametroSplit = _parametroValor.Split(':');
-
-                        _file = _parametroSplit[1];
+                        File = _parametroSplit[1];
                     }
                 }
-                return Dividir_Conteudo(_body);
+/*                foreach (var item in _listKeyValuePair)
+                {
+                    Console.WriteLine($"{item.Key} : {item.Value}");
+                }*/
+                return _dictionary;
             }
             catch (Exception ex)
             {
-                Program.Log($"Erro Function: Body \n{ex.Message}");
+                Program.Log(ex.ToString());
                 return null;
             }
         }
-        public List<string> Dividir_Conteudo(string conteudo) 
+        private List<string> Dividir_Conteudo(string conteudo) 
         {
-            List<string> _conteudoRetorno = null;
+            List<string> _conteudoRetorno = new List<string>();
             //string[] _conteudoRetorno;
             if (conteudo.Contains("\\"))
             {
@@ -97,7 +128,8 @@ namespace WhatspApp_Disparador
 
                     if (!string.IsNullOrEmpty(_slitConteudo[i]) && _slitConteudo[i] != "")
                     {
-                        _conteudoRetorno.Add(_slitConteudo[i]);
+                        //Console.WriteLine(_slitConteudo[i]);
+                        _conteudoRetorno.Add(_slitConteudo[i].Trim());
                     }                    
                 }
             }
@@ -105,8 +137,6 @@ namespace WhatspApp_Disparador
             {
                 _conteudoRetorno.Add(conteudo);
             }
-
-
             return _conteudoRetorno;
         }
     }

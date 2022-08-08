@@ -23,9 +23,8 @@ namespace WhatspApp_Disparador
         [STAThread]
         static void Main()
         {
-            //Api_DM.SendTeste(); 
-
-            //new MessageSend().teste();
+            //Api_DM.TesteTemp1();
+            //Api_DM.TesteTemp2();
             while (true)
             {
                 Console.Clear();
@@ -40,15 +39,53 @@ namespace WhatspApp_Disparador
         /// <summary>
         /// Faz a requisação do banco Blip e trata a mensagem de acordo com template
         /// </summary>
-        private static void WhatsSoft() 
+        private static void WhatsSoft()
         {
-            
             List<MessageSend> _messageSends = new MessageSend().GetListMessageSends();
 
             int _countMessage = _messageSends.Count;
 
             if (_messageSends != null && _countMessage > 0)
-            {                
+            {
+                Console.WriteLine($"Novo lote({_countMessage}):{DateTime.Now}...");
+
+                foreach (MessageSend item in _messageSends)
+                {
+                    Console.Write($"{_countMessage--} ");
+
+                    if (item.Template != null)
+                    {
+                        Api_DM api = new Api_DM()
+                        {
+                            number = item.NumTelefone,
+                            message = item.Template.Message,
+                            file = item.Template.File,
+                            sender = item.Sender == null ? "" : item.Sender.NumSessao,
+                        };
+                        item.Json = JsonConvert.SerializeObject(api);
+
+                        item.UpdateDbSoftcom();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Template NULL");
+                    }
+                }
+                MessageSend.InsertLoteDb(_messageSends);
+                Console.Write("Insert WhatsDM ");
+
+                Console.WriteLine("Insert OK!");
+            }
+        }
+        private static void WhatsSoft2()
+        {
+
+            List<MessageSend> _messageSends = new MessageSend().GetListMessageSends();
+
+            int _countMessage = _messageSends.Count;
+
+            if (_messageSends != null && _countMessage > 0)
+            {
                 Console.WriteLine($"Novo lote({_countMessage}):{DateTime.Now}...");
                 foreach (var item in _messageSends)
                 {
@@ -61,12 +98,12 @@ namespace WhatspApp_Disparador
                             for (int i = 0; i < msg.Length; i++)
                             {
                                 if (!string.IsNullOrEmpty(msg[i]))
-                                {                                    
+                                {
                                     msg[i] = msg[i].Trim();
                                 }
                                 //item.InsertDb();
                                 //Console.Write("Insert WhatsDM ");                              
-                                
+
                                 Console.Write("Update Agenda");
                                 Console.WriteLine();
                             }
@@ -74,7 +111,7 @@ namespace WhatspApp_Disparador
                         }
                         else
                         {
-                            item.Return = "Erro BodyMessage";                            
+                            item.Return = "Erro BodyMessage";
                         }
                         item.UpdateDbSoftcom();
                     }
@@ -82,7 +119,7 @@ namespace WhatspApp_Disparador
                     {
                         Console.WriteLine("Template NULL");
                     }
-                }                
+                }
                 MessageSend.InsertLoteDb(_messageSends);
                 Console.Write("Insert WhatsDM ");
 
@@ -98,8 +135,36 @@ namespace WhatspApp_Disparador
 
             if (_Sends != null)
             {
+                //Api_DM.SenderTest();
                 API.TesteSend();
-                int _cont = _Sends.Count;                
+                int _cont = _Sends.Count;
+                Console.WriteLine($"{_cont,5} {"ID",6} {"Suporte",7} {"Cliente",7} {"WhatsDM",12} {"Template",-26} {"Status",5}");
+                foreach (var item in _Sends)
+                {
+                    if (item.Template != null && item.Sender.Ativo)
+                    {
+                        //API.SendDM(item);
+                        Api_DM.SendDM(item);
+                        Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template.Nome,-26} {item.Return.Length,5}");
+                    }
+                    else
+                    {
+                        item.Return = "Sender_OFF";
+                        item.UpdateDb();
+                        //Console.WriteLine($"{_cont--,5} Sender_OFF={item.Sender.NumSessao}:{item.Sender.Porta}");
+                        Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template.Nome,-26} {item.Return,5}");
+                    }
+                }
+            }
+        }
+        private static void WhatsDM2()
+        {
+            List<MessageSend> _Sends = MessageSend.SelectDb_DM();
+
+            if (_Sends != null)
+            {
+                API.TesteSend();
+                int _cont = _Sends.Count;
                 Console.WriteLine($"{_cont,5} {"ID",6} {"Suporte",7} {"Cliente",7} {"WhatsDM",12} {"Template",-26} {"Status",5}");
                 foreach (var item in _Sends)
                 {
@@ -108,16 +173,16 @@ namespace WhatspApp_Disparador
                         API.SendDM(item);
                         Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template.Nome,-26} {item.Return.Length,5}");
                     }
-                    else 
+                    else
                     {
                         item.Return = "Sender_OFF";
                         item.UpdateDb();
                         //Console.WriteLine($"{_cont--,5} Sender_OFF={item.Sender.NumSessao}:{item.Sender.Porta}");
                         Console.WriteLine($"{_cont--,5} {item.Id,6} {item.IdSuporte,7} {item.IdCliente,7} {item.NumTelefone,12} {item.Template.Nome,-26} {item.Return,5}");
-                    }                    
+                    }
                 }
             }
-        }             
+        }
         public static bool Log(string strMensagem, string strNomeArquivo = "Log")
         {
             try

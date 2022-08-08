@@ -53,7 +53,7 @@ SELECT [Id]
 
                 foreach (var item in _tb.AsEnumerable())
                 {
-                    _listTemplate.Add(new Template(new MessageSend())
+                    _listTemplate.Add(new Template()
                     {
                         Id = item.Field<int>("Id"),
                         Gerador_id = item.Field<int>("Gerador_id"),
@@ -101,7 +101,7 @@ SELECT [Id]
 
                 foreach (var item in tb.AsEnumerable())
                 {
-                    template = new Template(new MessageSend())
+                    template = new Template()
                     {
                         Id = item.Field<int>("Id"),
                         Gerador_id = item.Field<int>("Gerador_id"),
@@ -141,7 +141,7 @@ SELECT [Id]
                 List<MessageSend> _list = new List<MessageSend>();
 
                 connBaseWhatsapp.Close();
-
+                                
                 foreach (var item in _tb.AsEnumerable())
                 {
                     MessageSend _msgTemp = new MessageSend
@@ -152,12 +152,14 @@ SELECT [Id]
                         IdCliente = item.Field<int>("Id_Cliente"),
                         NumOC = item.Field<int>("Num_OC"),
                         NumTelefone = "55" + item.Field<string>("NumeroWhatsapp"),
-                        Template = GetTemplate(item.Field<string>("TipoTemplete")),
+                        Template = new Template().Get(item.Field<string>("TipoTemplete"), item.Field<int>("Id_Cliente"), item.Field<int>("Num_OC"))??null,
+                        //Template = GetTemplate(item.Field<string>("TipoTemplete")),
                         //Sender = GetSessoes().Where(x=> x.NumSessao == item.Field<string>("Sender"))
                         Return = "",                        
                         Send = false
-                    };                    
+                    };
 
+                    Console.WriteLine(_msgTemp.Id);
                     _list.Add(_msgTemp);
                 }
                 return _list;
@@ -199,9 +201,49 @@ SELECT [Id]
                         Guid = item.Field<Guid>("Guid"),
                         IdSuporte = item.Field<int>("IdSuporte"),
                         IdCliente = item.Field<int>("IdCliente"),
+                        Json = item.Field<string>("Json"),
                         //Message = new[] { item.Field<string>("message") },
                         NumTelefone = item.Field<string>("numTelefone"),
-                        //Template = new Template().GetTemplate(item.Field<string>("Template"))
+                        Template = GetTemplate(item.Field<string>("Template"))
+                    });
+                }
+                return _list.Count > 0 ? _list : null;
+            }
+            catch (Exception ex)
+            {
+                Task.Factory.StartNew(() => { MessageBox.Show($"GetListEnvio_DbWhatsDM ERRO:{ex.Message}"); });
+                return null;
+            }
+            finally
+            {
+                connBaseWhatsAPI.Close();
+            }
+        }
+        public static List<MessageSend> Get_DbWhatsDM()
+        {
+            try
+            {
+                string _scriptSQL = "SELECT * FROM `messagesend` WHERE `Send` = false";
+
+                _scriptSQL = Program.Homologacao ? "SELECT * FROM `messagesend` WHERE `Send` = false and `IdSuporte` = 631" : _scriptSQL;
+
+                connBaseWhatsAPI.Open();
+                MySqlCommand _cmd = new MySqlCommand(_scriptSQL, connBaseWhatsAPI);
+
+                MySqlDataAdapter _sqlDataAdapter = new MySqlDataAdapter(_cmd);
+                DataTable _tb = new DataTable();
+                _tb.Load(_cmd.ExecuteReader());
+                MySqlDataAdapter _data = _sqlDataAdapter;
+
+                List<MessageSend> _list = new List<MessageSend>();
+
+                foreach (var item in _tb.AsEnumerable())
+                {
+                    _list.Add(new MessageSend
+                    {
+                        Id = item.Field<int>("Id"),
+                        Guid = item.Field<Guid>("Guid"),
+                        Json = item.Field<string>("Json"),
                     });
                 }
                 return _list.Count > 0 ? _list : null;
@@ -235,7 +277,6 @@ SELECT [Id]
                 connBaseWhatsAPI.Close();
             }
         }
-
         public static string[] BodyMessage(MessageSend message)
         {
             string _script = $@"SELECT * FROM [vw_whatsDM_templates] WHERE [Nome] like '{message.Template.Nome}'";
@@ -328,7 +369,6 @@ SELECT [Id]
                 connBaseWhatsapp.Close();
             }
         }
-
         public static string ExeQuerysProcedure(string strSQL, int registroCliente, SqlConnection sqlConnection = null)
         {
             try
