@@ -10,7 +10,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Web;
+using System.Dynamic;
+using Newtonsoft.Json.Converters;
 
 namespace WhatspApp_Disparador
 {
@@ -20,10 +24,21 @@ namespace WhatspApp_Disparador
         /// Função principal onde passa a classe messageSend e converte em messageSendWhats para setar no Disparo do WhatsDM
         /// </summary>
         /// <param name="messageSend"></param>
-        public static async void SendDM(MessageSend messageSend)
+        public static async void Post2(MessageSend messageSend)
         {
             //################################|ENVIO|################################
             string retornoWhatsDM_Post = WhatDM_Post(messageSend).Result;
+
+            messageSend.Send = true;
+            messageSend.Return = retornoWhatsDM_Post;
+            messageSend.UpdateDb();
+
+            await Task.CompletedTask;
+        }
+        public static async void Post(MessageSend messageSend)
+        {
+            //################################|ENVIO|################################
+            string retornoWhatsDM_Post = WhatDM_Post(jsonString: messageSend.Json).Result;
 
             messageSend.Send = true;
             messageSend.Return = retornoWhatsDM_Post;
@@ -40,7 +55,7 @@ namespace WhatspApp_Disparador
                      .PostUrlEncodedAsync(new
                      {
                          number = message.NumTelefone,
-                         //message = message.Message,
+                         //message = ,
                          sender = message.Sender.NumSessao
                      })
                      .ReceiveString();
@@ -52,6 +67,48 @@ namespace WhatspApp_Disparador
             catch (Exception ex)
             {
                 Program.Log($"MessageSendWhatsDM:{ex.Message}\n{message}");
+                return "Erro !";
+            }
+        }
+        public static async Task<string> WhatDM_Post(string jsonString)
+        {
+            try
+            {
+                dynamic _data = JsonConvert.DeserializeObject<ExpandoObject>
+                    (jsonString.Replace(@"\",@"\\"), new ExpandoObjectConverter());
+
+                string _rota = "";
+
+                if (string.IsNullOrEmpty(_data.file))
+                {
+                    _rota = "send-message";
+                }
+                else
+                {
+                    _rota = "send-media";                    
+                }
+
+                string _json = jsonString.Replace(@"\", @"\\");
+
+                //Console.WriteLine(_json);
+
+                var responseString = await $@"http://ragnar:{_data.porta}/{_rota}"
+                    .ConfigureRequest(settings => settings.Timeout = TimeSpan.FromSeconds(4))
+                    .PostUrlEncodedAsync(new 
+                    {
+                         number = _data.number,
+                         message = _data.message,
+                         sender = _data.sender,
+                         file = _data.file,
+                    })
+                     .ReceiveString();
+                await Task.CompletedTask;
+
+                return responseString;
+            }
+            catch (Exception ex)
+            {
+                Program.Log($"MessageSendWhatsDM:{ex.Message}\n{jsonString}");
                 return "Erro !";
             }
         }
@@ -85,7 +142,10 @@ namespace WhatspApp_Disparador
                     }
                     item.Ativo = _status;
                     item.UpdateStatus();
+
+                    Console.WriteLine($"{item.NumSessao} {_status}");
                 }
+                Console.Clear();
             }
         }
     }
