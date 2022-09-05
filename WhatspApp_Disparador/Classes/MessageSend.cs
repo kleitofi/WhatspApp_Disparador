@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,17 +19,20 @@ namespace WhatspApp_Disparador
         public int Id { get; set; }
         public Guid Guid { get; set; }
         public int IdSuporte { get; set; }
+        public int Ocorrencia { get; set; }
         public int IdCliente { get; set; }
+        public int NumOC { get; set; }
         public Template Template { get; set; }
         public string NumTelefone { get; set; }
-        public string[] Message { get; set; }        
+        public string File { get; set; }
+        public string Json { get; set; }
         public string Return { get; set; }
         public Sessoes Sender
         {
             get
             {
                 if (sender == null)
-                {
+                {                    
                     sender = GetSessoes(JsonNode.Parse(Template.Criterios)["Sender"].AsArray());
                 }
                 return sender;
@@ -38,11 +40,11 @@ namespace WhatspApp_Disparador
             set { sender = value; }
         }
         public bool Send { get; set; }
-        public DateTime DateTime { get; set; }
+        public DateTime DateTime { get; set; }        
         public async void UpdateDbSoftcom()
         {
             string _string = $@"
-update vw_whatsDM_envios
+update HistoricoEnvio
 set Blip_MsgEnviada = -1, Blip_MsgEnviadaRetorno = '{Return}'
 where id = {Id}";
 
@@ -52,7 +54,7 @@ where id = {Id}";
         {
             string _string = $@"
 INSERT INTO `dbwhatsdm`.`messagesend` (
-    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Json`, `Return`, `Send`, `DateTime`) 
 VALUES (
 NULL,
 '{Guid}' ,
@@ -60,7 +62,7 @@ NULL,
 '{IdCliente}' ,
 '{Template.Nome}' ,
 '{NumTelefone}' ,
-'{Message}' ,
+'{Json}' ,
 '{Return}' ,
 '{(Send ? '1' : '0')}' ,
 NOW()
@@ -72,7 +74,7 @@ NOW()
         {
             string _string = $@"
 INSERT INTO `dbwhatsdm`.`messagesend` (
-    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Json`, `Return`, `Send`, `DateTime`) 
 VALUES (
 NULL,
 '{Guid}' ,
@@ -80,7 +82,7 @@ NULL,
 '{IdCliente}' ,
 '{Template.Nome}' ,
 '{NumTelefone}' ,
-'{Message}' ,
+'{Json}' ,
 '{Return}' ,
 '{(Send ? '1' : '0')}' ,
 NOW()
@@ -92,10 +94,10 @@ NOW()
         {
             string _script = "";
             string _head = $@"INSERT INTO `dbwhatsdm`.`messagesend` (
-    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Message`, `Return`, `Send`, `DateTime`) 
+    `Id`, `Guid`, `IdSuporte`, `IdCliente`, `Template`, `NumTelefone`, `Json`, `Return`, `Send`, `DateTime`) 
 VALUES
 "; ;
-            string _rows = "";            
+            string _rows = "";
             if (list_MessageSend != null)
             {
                 //tamanho da lista de dados
@@ -115,7 +117,7 @@ NULL,
 '{item.IdCliente}' ,
 '{item.Template.Nome}' ,
 '{item.NumTelefone}' ,
-'{item.Message[0]}' ,
+'{item.Json}' ,
 '{item.Return}' ,
 '{(item.Send ? '1' : '0')}' ,
 NOW()
@@ -162,17 +164,25 @@ WHERE Id = '{Id}'
                     _sessoes = Sessoes.GetList().FirstOrDefault(x => x.Nome == item);
                 }
 
-                if( _sessoes != null ) return _sessoes;
+                if (_sessoes != null) return _sessoes;
             }
             return _sessoes;
         }
-        public static List<MessageSend> SelectDb_Soft()
+        public static List<MessageSend> GetList_dbAgenda()
         {
-            return SQL.GetListEnvio_DbSoft();
+            List<MessageSend> _msgSend_List = SQL.SelectEnvio_dbAgenda();
+
+            return _msgSend_List;
         }
-        public static List<MessageSend> SelectDb_DM()
+        public static List<MessageSend> GetList_dbWhatsDM()
         {
-            return SQL.GetListEnvio_DbWhatsDM();
+            List<MessageSend> _msgSend_List = SQL.SelectEnvio_dbWhatsDM();
+
+            return _msgSend_List;            
+        }
+        public string JsonBody()
+        {
+            return "";
         }
 
     }

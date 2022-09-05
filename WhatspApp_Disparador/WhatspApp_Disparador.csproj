@@ -101,6 +101,8 @@
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -119,7 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\API.cs" />
-    <Compile Include="Classes\Message.cs" />
+    <Compile Include="Classes\Api_DM.cs" />
     <Compile Include="Classes\MessageSend.cs" />
     <Compile Include="Classes\Template.cs" />
     <Compile Include="Objetos\EventoLog.cs" />
