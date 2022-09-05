@@ -132,6 +132,8 @@ SELECT [Id]
 
                 _script = Program.Homologacao ? "select * from vw_whatsDM_envios_testes" : _script;
 
+                _script = Program.Homologacao ? "select * from vw_whatsDM_envios where Id_Suporte = 631" : _script;
+
                 connBaseWhatsapp.Open();
 
                 SqlCommand _cmd = new SqlCommand(_script, connBaseWhatsapp);
@@ -152,8 +154,14 @@ SELECT [Id]
                         IdCliente = item.Field<int>("Id_Cliente"),
                         NumOC = item.Field<int>("Num_OC"),
                         NumTelefone = "55" + item.Field<string>("NumeroWhatsapp"),
+<<<<<<< HEAD
                         Template = new Template().Get(item.Field<string>("TipoTemplete"), item.Field<int>("Id_Cliente"), item.Field<int>("Num_OC"))??null,
                         Return = "",                        
+=======
+                        Template = new Template().GetTemplate(item.Field<string>("TipoTemplete")),
+                        Return = "",
+                        //Message = "",
+>>>>>>> 9f332b6d7660b074efe680bf3da3a39c2e3ae30e
                         Send = false
                     };
 
@@ -199,7 +207,11 @@ SELECT [Id]
                         Guid = item.Field<Guid>("Guid"),
                         IdSuporte = item.Field<int>("IdSuporte"),
                         IdCliente = item.Field<int>("IdCliente"),
+<<<<<<< HEAD
                         Json = item.Field<string>("Json"),
+=======
+                        Message = new[] { item.Field<string>("message") },
+>>>>>>> 9f332b6d7660b074efe680bf3da3a39c2e3ae30e
                         NumTelefone = item.Field<string>("numTelefone"),
                         Template = GetTemplate(item.Field<string>("Template"))
                     });

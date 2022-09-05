@@ -24,8 +24,12 @@ namespace WhatspApp_Disparador
         public int NumOC { get; set; }
         public Template Template { get; set; }
         public string NumTelefone { get; set; }
+<<<<<<< HEAD
         public string File { get; set; }
         public string Json { get; set; }
+=======
+        public string[] Message { get; set; }        
+>>>>>>> 9f332b6d7660b074efe680bf3da3a39c2e3ae30e
         public string Return { get; set; }
         public Sessoes Sender
         {
@@ -117,7 +121,11 @@ NULL,
 '{item.IdCliente}' ,
 '{item.Template.Nome}' ,
 '{item.NumTelefone}' ,
+<<<<<<< HEAD
 '{item.Json}' ,
+=======
+'{item.Message[0]}' ,
+>>>>>>> 9f332b6d7660b074efe680bf3da3a39c2e3ae30e
 '{item.Return}' ,
 '{(item.Send ? '1' : '0')}' ,
 NOW()

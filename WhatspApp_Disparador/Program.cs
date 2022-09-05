@@ -19,8 +19,6 @@ namespace WhatspApp_Disparador
 {
     static class Program
     {
-        public static bool Homologacao = false;
-        public static JavaScriptSerializer js = new JavaScriptSerializer();
         /// <summary>
         /// Ponto de entrada principal para o aplicativo.
         /// </summary>
@@ -30,12 +28,11 @@ namespace WhatspApp_Disparador
             while (true)
             {
                 Console.Clear();
-                ///Select mensagens e tratamenta do copor da mensagem insere o MySQL DB_WhatsDM
+                //Select mensagens e tratamenta do copor da mensagem insere o MySQL DB_WhatsDM
                 WhatsSoft();
                 ///Envio das mensagens para API
                 WhatsDM();
-                Console.WriteLine($"{DateTime.Now} - Sleep...");
-                Thread.Sleep(TimeSpan.FromSeconds(Homologacao ? 5 : 10));
+                Thread.Sleep(TimeSpan.FromSeconds(30));
             }
         }
         /// <summary>
@@ -49,37 +46,41 @@ namespace WhatspApp_Disparador
 
             if (_messageSends != null && _countMessage > 0)
             {
-                Console.WriteLine($"Novo lote({_countMessage})");
-
-                foreach (MessageSend item in _messageSends)
+                Console.WriteLine($"Novo lote({_countMessage}):{DateTime.Now}...");
+                foreach (var item in _messageSends)
                 {
                     Console.WriteLine($"{_countMessage--} ");
 
                     if (item.Template != null)
                     {
-                        List<dynamic> dyn_message = new List<dynamic>();
-
-                        dyn_message.Add(new { 
-                            number = item.NumTelefone, 
-                            message = item.Template.Message,
-                            file = item.Template.File,
-                            sender = item.Sender == null ? "" : item.Sender.NumSessao, 
-                            porta = item.Sender == null ? "" : item.Sender.Porta 
-                        });
-
-                        string json = JsonConvert.SerializeObject(dyn_message[0]);
-
-                        item.Json = json;
-                        item.UpdateDbSoftcom();
+                        string[] msg = SQL.BodyMessage(item);
+                        if (msg != null)
+                        {
+                            for (int i = 0; i < msg.Length; i++)
+                            {
+                                if (!string.IsNullOrEmpty(msg[i]))
+                                {
+                                    Console.Write($"{_countMessage--} ");
+                                    item.Message = msg[i].Trim();
+                                    item.InsertDb();
+                                    Console.Write("Insert WhatsDM ");
+                                    item.UpdateDbSoftcom();
+                                    Console.Write("Update Agenda");
+                                    Console.WriteLine();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            item.Return = "Erro BodyMessage";
+                            item.UpdateDbSoftcom();
+                        }
                     }
                     else
                     {
                         Console.WriteLine("Template NULL");
                     }
                 }
-                MessageSend.InsertLoteDb(_messageSends);
-                Console.Write("Insert WhatsDM ");
-
                 Console.WriteLine("Insert OK!");
             }
         }        

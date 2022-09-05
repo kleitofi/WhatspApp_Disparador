@@ -70,6 +70,7 @@ namespace WhatspApp_Disparador
                 return "Erro !";
             }
         }
+<<<<<<< HEAD
         public static async Task<string> WhatDM_Post(string jsonString)
         {
             try
@@ -112,6 +113,8 @@ namespace WhatspApp_Disparador
                 return "Erro !";
             }
         }
+=======
+>>>>>>> 9f332b6d7660b074efe680bf3da3a39c2e3ae30e
         public static void TesteSend(string numSessao = null)
         {
             List<Sessoes> _ListSessoes = Sessoes.GetList();
