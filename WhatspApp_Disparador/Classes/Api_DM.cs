@@ -63,7 +63,6 @@ namespace WhatspApp_Disparador
             }
 
         }
-
         public static async Task<string> Send(MessageSend messageSend)
         {
             string _jsonRetorno = null;

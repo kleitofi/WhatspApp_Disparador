@@ -124,11 +124,11 @@ SELECT [Id]
                 connBaseWhatsapp.Close();
             }
         }
-        public static List<MessageSend> GetListEnvio_DbSoft()
+        public static List<MessageSend> SelectEnvio_dbAgenda()
         {
             try
             {
-                string _script = $@"select * from vw_whatsDM_envios";               
+                string _script = $@"select top 50 * from vw_whatsDM_envios";               
 
                 _script = Program.Homologacao ? "select * from vw_whatsDM_envios_testes" : _script;
 
@@ -153,8 +153,6 @@ SELECT [Id]
                         NumOC = item.Field<int>("Num_OC"),
                         NumTelefone = "55" + item.Field<string>("NumeroWhatsapp"),
                         Template = new Template().Get(item.Field<string>("TipoTemplete"), item.Field<int>("Id_Cliente"), item.Field<int>("Num_OC"))??null,
-                        //Template = GetTemplate(item.Field<string>("TipoTemplete")),
-                        //Sender = GetSessoes().Where(x=> x.NumSessao == item.Field<string>("Sender"))
                         Return = "",                        
                         Send = false
                     };
@@ -175,7 +173,7 @@ SELECT [Id]
                 connBaseWhatsapp.Close();
             }
         }
-        public static List<MessageSend> GetListEnvio_DbWhatsDM()
+        public static List<MessageSend> SelectEnvio_dbWhatsDM()
         {
             try
             {
@@ -202,7 +200,6 @@ SELECT [Id]
                         IdSuporte = item.Field<int>("IdSuporte"),
                         IdCliente = item.Field<int>("IdCliente"),
                         Json = item.Field<string>("Json"),
-                        //Message = new[] { item.Field<string>("message") },
                         NumTelefone = item.Field<string>("numTelefone"),
                         Template = GetTemplate(item.Field<string>("Template"))
                     });

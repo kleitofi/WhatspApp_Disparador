@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,7 +32,7 @@ namespace WhatspApp_Disparador
             get
             {
                 if (sender == null)
-                {
+                {                    
                     sender = GetSessoes(JsonNode.Parse(Template.Criterios)["Sender"].AsArray());
                 }
                 return sender;
@@ -45,7 +44,7 @@ namespace WhatspApp_Disparador
         public async void UpdateDbSoftcom()
         {
             string _string = $@"
-update vw_whatsDM_envios
+update HistoricoEnvio
 set Blip_MsgEnviada = -1, Blip_MsgEnviadaRetorno = '{Return}'
 where id = {Id}";
 
@@ -169,15 +168,17 @@ WHERE Id = '{Id}'
             }
             return _sessoes;
         }
-        public List<MessageSend> GetListMessageSends()
+        public static List<MessageSend> GetList_dbAgenda()
         {
-            List<MessageSend> _msgSend_List = SQL.GetListEnvio_DbSoft();
+            List<MessageSend> _msgSend_List = SQL.SelectEnvio_dbAgenda();
 
             return _msgSend_List;
         }
-        public static List<MessageSend> SelectDb_DM()
+        public static List<MessageSend> GetList_dbWhatsDM()
         {
-            return SQL.GetListEnvio_DbWhatsDM();
+            List<MessageSend> _msgSend_List = SQL.SelectEnvio_dbWhatsDM();
+
+            return _msgSend_List;            
         }
         public string JsonBody()
         {
